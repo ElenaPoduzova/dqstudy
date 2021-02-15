@@ -1,2 +1,2 @@
 # dqstudy
-Repository for Data Quality Testing course
+Repository for Data Quality Testing #2 course
