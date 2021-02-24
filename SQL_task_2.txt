@@ -1,0 +1,166 @@
+1. Составьте запрос, который выведет Кастомеров, для которых нет заказов.
+
+SELECT c.CustomerID, c.CustomerName, c.ContactName, c.Address, c.City FROM Customers c
+LEFT JOIN Orders o ON c.CustomerID = o.CustomerID
+WHERE o.CustomerID IS NULL
+
+Result: Number of Records: 17
+CustomerID	CustomerName							ContactName			Address	City
+1	        Alfreds Futterkiste						Maria Anders		Obere Str. 57					Berlin
+6			Blauer See Delikatessen					Hanna Moos			Forsterstr. 57					Mannheim
+12			Cactus Comidas para llevar				Patricio Simpson	Cerrito 333						Buenos Aires
+22			FISSA Fabrica Inter. Salchichas S.A.	Diego Roel			C/ Moralzarzal, 86				Madrid
+26			France restauration						Carine Schmitt		54, rue Royale					Nantes
+32			Great Lakes Food Market					Howard Snyder		2732 Baker Blvd.				Eugene
+40			La corne d'abondance					Daniel Tonini		67, avenue de l'Europe			Versailles
+42			Laughing Bacchus Wine Cellars			Yoshi Tannamuri		1900 Oak St.					Vancouver
+43			Lazy K Kountry Store					John Steel			12 Orchestra Terrace			Walla Walla
+45			Let's Stop N Shop						Jaime Yorres		87 Polk St. Suite 5				San Francisco
+50			Maison Dewey							Catherine Dewey		Rue Joseph-Bens 532				Bruxelles
+53			North/South								Simon Crowther		South House 300 Queensbridge	London
+57			Paris spécialités						Marie Bertrand		265, boulevard Charonne			Paris
+64			Rancho grande							Sergio Gutiérrez	Av. del Libertador 900			Buenos Aires
+74			Spécialités du monde					Dominique Perrier	25, rue Lauriston				Paris
+78			The Cracker Box							Liu Wong			55 Grizzly Peak Rd.				Butte
+82			Trail's Head Gourmet Provisioners		Helvetius Nagy		722 DaVinci Blvd.				Kirkland
+
+----------------------------------------------------------------------------------------------------------------------------------------
+2. Посчитать количество продуктов в каждом заказе и вывести максимальное число продуктов среди всех заказов.
+
+SELECT MAX(ProductsCount) as MaxProducts, OrderID FROM
+	(SELECT COUNT(*) as ProductsCount, OrderID FROM OrderDetails od
+	GROUP BY od.OrderID)
+
+Result:
+MaxProducts	OrderID
+5	        10273
+
+----------------------------------------------------------------------------------------------------------------------------------------
+3. Выбрать самого молодого сотрудника, родившегося в 50-х годах.
+
+SELECT *, MAX(BirthDate) as BirthDate FROM 
+	(SELECT * FROM Employees e
+	WHERE e.BirthDate BETWEEN '1950-01-01' AND '1959-12-31')
+
+Result:
+EmployeeID	LastName	FirstName	BirthDate	Photo		Notes
+4			Peacock		Margaret	1958-09-19	EmpID4.pic	Margaret holds a BA in English literature from Concordia College and an MA from the American Institute of Culinary Arts. She was temporarily assigned to the London office before returning to her permanent post in Seattle.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+4. Посчитать количество кастомеров, которые заказывали продукты, поставляемые из Великобритании и Испании
+
+SELECT COUNT(*) as CustomersCount FROM
+	(SELECT c.CustomerID, o.OrderID, p.ProductName, od.OrderDetailID, s.Country FROM Customers c
+	INNER JOIN Orders o ON o.CustomerID = c.CustomerID
+	INNER JOIN OrderDetails od ON od.OrderID = o.OrderID
+	INNER JOIN Products p ON p.ProductID = od.ProductID
+	INNER JOIN Suppliers s ON s.SupplierID = p.SupplierID
+	WHERE s.Country = 'UK' OR s.Country = 'Spain'
+	GROUP BY c.CustomerID)
+
+Result:
+CustomersCount
+44
+
+----------------------------------------------------------------------------------------------------------------------------------------
+5. Вывести сотрудников таким образом, чтобы сотрудник Dodsworth Anne 	присутствовал дважды.
+Для полученного результата написать запрос, который подсветит наличие дубликатов - выведет дублирующиеся строки - Анну в нашем случае.
+
+SELECT * FROM
+(SELECT * FROM Employees
+UNION ALL
+SELECT * FROM Employees WHERE EmployeeID = 9)
+GROUP BY FirstName, LastName
+HAVING 
+    COUNT(*) > 1
+	
+Result:
+EmployeeID	LastName	FirstName	BirthDate	Photo		Notes
+9			Dodsworth	Anne		1969-07-02	EmpID9.pic	Anne has a BA degree in English from St. Lawrence College. She is fluent in French and German.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+6. Написать запрос, который сравнит количество символов в колонке Country из Таблицы поставщиков (Suppliers) и кастомеров (Customers)
+Написать запрос, который сравнит количество символов в колонке Country из Таблицы поставщиков и кастомеров. Добавьте еще одну колонку Result. 
+Если количество символов в колонках совпадает, то тогда значение в колонке Result 'Y', если не совпадает, то 'N'
+
+SELECT c.CustomerID, c.Country as CustomerCountry, s.Country as SupllierCountry, 
+(CASE WHEN (LENGTH(c.Country) = LENGTH(s.Country)) THEN 'Y' ELSE 'N' END) as Compare FROM Customers c
+	INNER JOIN Orders o ON o.CustomerID = c.CustomerID
+	INNER JOIN OrderDetails od ON od.OrderID = o.OrderID
+	INNER JOIN Products p ON p.ProductID = od.ProductID
+	INNER JOIN Suppliers s ON s.SupplierID = p.SupplierID
+	
+Result:
+Number of Records: 518
+
+Examples from result:
+CustomerID	CustomerCountry	SupllierCountry	Compare
+90			Finland			Spain					N
+34			Brazil			France					Y
+13			Mexico			UK						N
+13			Mexico			Sweden					Y
+65			USA				USA						Y
+
+----------------------------------------------------------------------------------------------------------------------------------------
+7. В таблице Suppliers сгруппируйте поставщиков (SupplierName) по первой букве и выведите, какое количество поставщиков приходится на каждую букву. 
+Полученные строки отсортируйте в алфавитном порядке. Результат работы запроса должен иметь приблизительно такой вид:
+A - 2 
+C - 3 
+D -1 
+
+SELECT COUNT(*), SUBSTR( SupplierName, 1, 1 ) as Name FROM [Suppliers]
+GROUP BY SUBSTR( SupplierName, 1, 1 )
+ORDER BY SUBSTR( SupplierName, 1, 1 )
+
+Result:
+
+Number of Records: 16
+COUNT(*)	Name
+1			A
+1			B
+1			C
+2			E
+2			F
+3			G
+1			H
+1			K
+2			L
+2			M
+4			N
+4			P
+1			R
+2			S
+1			T
+1			Z
+
+----------------------------------------------------------------------------------------------------------------------------------------
+8. Вывести кастомеров (customerid, customername), у которых самый высокий по стоимости товар в заказе 
+давайте чуть изменим задание, точнее дополним. 
+найдите кастомеров, у которых либо самый высокий товар по стоимости, либо второй по стоимости
+
+SELECT c.CustomerID, c.CustomerName, o.OrderID, p.ProductName, p.Price FROM Customers c
+	INNER JOIN Orders o ON o.CustomerID = c.CustomerID
+	INNER JOIN OrderDetails od ON od.OrderID = o.OrderID
+	INNER JOIN (SELECT ProductName, Price, ProductID, SupplierID FROM Products ORDER BY Price DESC LIMIT 2) p ON p.ProductID = od.ProductID
+	INNER JOIN Suppliers s ON s.SupplierID = p.SupplierID
+    ORDER BY Price
+	
+Number of Records: 16
+CustomerID	CustomerName				OrderID		ProductName					Price
+33			GROSELLA-Restaurante		10268		Thüringer Rostbratwurst		123.79
+15			Comércio Mineiro			10290		Thüringer Rostbratwurst		123.79
+55			Old World Delicatessen		10305		Thüringer Rostbratwurst		123.79
+58			Pericles Comidas clásicas	10354		Thüringer Rostbratwurst		123.79
+7			Blondel père et fils		10360		Thüringer Rostbratwurst		123.79
+75			Split Rail Beer & Ale		10369		Thüringer Rostbratwurst		123.79
+20			Ernst Handel				10382		Thüringer Rostbratwurst		123.79
+19			Eastern Connection			10400		Thüringer Rostbratwurst		123.79
+71			Save-a-lot Markets			10440		Thüringer Rostbratwurst		123.79
+75			Split Rail Beer & Ale		10329		Côte de Blaye	        	263.5
+20			Ernst Handel				10351		Côte de Blaye	        	263.5
+59			Piccolo und mehr			10353		Côte de Blaye	        	263.5
+7			Blondel père et fils		10360		Côte de Blaye	        	263.5
+62			Queen Cozinha				10372		Côte de Blaye	        	263.5
+73			Simons bistro				10417		Côte de Blaye	        	263.5
+51			Mère Paillarde				10424		Côte de Blaye	        	263.5
