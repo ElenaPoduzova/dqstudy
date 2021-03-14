@@ -1,0 +1,47 @@
+Request:
+
+CREATE TABLE contryRank AS
+SELECT 
+	DENSE_RANK() OVER (PARTITION BY continent, region ORDER BY area DESC) AS rank,
+	continents.name AS continent, regions.name AS region, countries.name AS country, countries.area AS area,  countries.country_code3 AS county_code3, COALESCE(countries.national_day, "no data") AS nday
+FROM regions
+INNER JOIN continents on continents.continent_id = regions.continent_id
+INNER JOIN countries on regions.region_id = countries.region_id
+
+
+countryRank table:
+
+db/nation/contryRank/		http://localhost:8000/index.php?route=/sql&server=1&db=nation&table=contryRank&pos=0
+Showing rows 0 - 24 (248 total, Query took 0.0004 seconds.)
+
+SELECT * FROM `contryRank`
+
+
+rank	continent	region			country									area		county_code3	nday	
+1	 	Africa		Central Africa	The Democratic Republic of the Congo	2344858.00	COD				no data	
+2	 	Africa		Central Africa	Chad									1284000.00	TCD				1960-08-11	
+3	 	Africa		Central Africa	Angola									1246700.00	AGO				2075-11-11	
+4	 	Africa		Central Africa	Central African Republic				622984.00	CAF				1960-08-13	
+5	 	Africa		Central Africa	Cameroon								475442.00	CMR				1960-01-01	
+6	 	Africa		Central Africa	Congo									342000.00	COG				no data	
+7	 	Africa		Central Africa	Gabon									267668.00	GAB				1960-08-17	
+8	 	Africa		Central Africa	Equatorial Guinea						28051.00	GNQ				1968-10-12	
+9	 	Africa		Central Africa	Sao Tome and Principe					964.00		STP				no data	
+1	 	Africa		Eastern Africa	Ethiopia								1104300.00	ETH				no data	
+2	 	Africa		Eastern Africa	Tanzania								883749.00	TZA				1961-12-09	
+3	 	Africa		Eastern Africa	Mozambique								801590.00	MOZ				1975-06-25	
+4	 	Africa		Eastern Africa	Zambia									752618.00	ZMB				1964-10-24	
+5	 	Africa		Eastern Africa	Somalia									637657.00	SOM				1960-07-01	
+6	 	Africa		Eastern Africa	Madagascar								587041.00	MDG				1960-06-26	
+7	 	Africa		Eastern Africa	Kenya									580367.00	KEN				1963-12-12	
+8	 	Africa		Eastern Africa	Zimbabwe								390757.00	ZWE				1980-04-18	
+9	 	Africa		Eastern Africa	Uganda									241038.00	UGA				1962-10-09	
+10	 	Africa		Eastern Africa	Malawi									118484.00	MWI				1964-07-06	
+11	 	Africa		Eastern Africa	Eritrea									117600.00	ERI				1993-05-24	
+12	 	Africa		Eastern Africa	Burundi									27834.00	BDI				1962-07-01	
+13	 	Africa		Eastern Africa	Rwanda									26338.00	RWA				1962-07-01	
+14	 	Africa		Eastern Africa	Djibouti								23200.00	DJI				1977-06-27	
+15	 	Africa		Eastern Africa	Réunion									2510.00		REU				no data	
+16	 	Africa		Eastern Africa	Mauritius								2040.00		MUS				1968-03-12	
+
+Screenshot - countryRankTable.jpg
