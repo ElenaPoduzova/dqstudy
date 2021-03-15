@@ -1,0 +1,122 @@
+1. Create directories:
+hdfs dfs -mkdir -p /user/student
+Create nested directories:
+hdfs dfs -mkdir -p /user/student/airports
+hdfs dfs -mkdir -p /user/student/airlines
+hdfs dfs -mkdir -p /user/student/routes
+hdfs dfs -mkdir -p /user/student/planes
+hdfs dfs -mkdir -p /user/student/countries
+
+Screenshot: HDFSCreateAndCopy.jpg
+
+2. Copy files from local file system:
+Exapmle for one file:
+hdfs dfs -copyFromLocal /home/cloudera/Desktop/datafiles/airports.dat /user/student/airports
+
+Screenshot: HDFSFilesCopied.jpg
+
+3. Print 9 lines to console:
+hdfs dfs -cat user/student/countries/countries.dat | head -n 9
+
+Result:
+"Bonaire, Saint Eustatius and Saba","BQ",""
+"Aruba","AW","AA"
+"Antigua and Barbuda","AG","AC"
+"United Arab Emirates","AE","AE"
+"Afghanistan","AF","AF"
+"Algeria","DZ","AG"
+"Azerbaijan","AZ","AJ"
+"Albania","AL","AL"
+"Armenia","AM","AM"
+
+Screenshot: HDFSCreateAndCopy.jpg
+
+4. Compare MD5 checksums. They are different.
+According to https://community.cloudera.com/t5/Community-Articles/Comparing-checksums-in-HDFS/ta-p/248617:
+When we run the checksum command (hdfs dfs -checksum) for a hdfs file it calculates MD5 of MD5 of checksums of 
+individual chunks (each chunk is typically 512 bytes long). However this is not very useful for comparison with a local copy.
+
+
+[cloudera@quickstart ~]$ hdfs dfs -checksum user/student/airports/airports.dat
+user/student/airports/airports.dat	MD5-of-0MD5-of-512CRC32C	000002000000000000000000a4129426226faee1719fb3c00d055f16
+[cloudera@quickstart ~]$ md5sum /home/cloudera/Desktop/datafiles/airports.dat
+acfcde754e66b4f224562fa74b567b2b  /home/cloudera/Desktop/datafiles/airports.dat
+
+Screenshot: HDFSChecksum.jpg
+
+5. Number of replicas = 1
+
+hdfs dfs -ls user/student/airports/airports.dat
+-rw-r--r--   1 cloudera cloudera    1127225 2021-03-15 10:22 user/student/airports/airports.dat
+
+Set replication factor to 4:
+hdfs dfs -setrep -w 4 user/student/airports/airports.dat
+Replication 4 set: user/student/airports/airports.dat
+
+Screenshot: HDFSReplication.jpg
+
+6. Size of directory:
+hdfs dfs -du -s -h user/student
+3.7 M  7.0 M  user/student
+
+ size  |  disk_space_consumed_with_all_replicas  |  full_path_name
+ 
+In local system
+3.7 M
+
+Size of directory is more in HDFS Storage.
+The reason is that the second column’s value is derived by multiplying the size of each file in a directory by its replication factor, 
+to arrive at the actual space occupied by that file.
+
+7. Run filesystem checking utility:
+
+[cloudera@quickstart ~]$ hdfs fsck /user
+Connecting to namenode via http://quickstart.cloudera:50070/fsck?ugi=cloudera&path=%2Fuser
+FSCK started by cloudera (auth:SIMPLE) from /10.0.2.15 for path /user at Mon Mar 15 12:44:37 PDT 2021
+..
+/user/cloudera/user/student/airports/airports.dat:  
+Under replicated BP-1067413441-127.0.0.1-1508775264580:blk_1073742764_1942. Target Replicas is 4 but found 1 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+..................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+....................................................................................................
+..........................Status: HEALTHY
+ Total size:	865198409 B
+ Total dirs:	35
+ Total files:	926
+ Total symlinks:		0
+ Total blocks (validated):	926 (avg. block size 934339 B)
+ Minimally replicated blocks:	926 (100.0 %)
+ Over-replicated blocks:	0 (0.0 %)
+ Under-replicated blocks:	1 (0.10799136 %)
+ Mis-replicated blocks:		0 (0.0 %)
+ Default replication factor:	1
+ Average block replication:	1.0
+ Corrupt blocks:		0
+ Missing replicas:		3 (0.3229279 %)
+ Number of data-nodes:		1
+ Number of racks:		1
+FSCK ended at Mon Mar 15 12:44:37 PDT 2021 in 209 milliseconds
+
+
+The filesystem under path '/user' is HEALTHY
+
+Screenshot: HDFSHealthCheck.jpg
+
+•	Are there any corrupted files and blocks?
+No, Corrupt blocks:		0
+
+•	Are there any missed blocks?
+Yes,  Missing replicas:		3 (0.3229279 %)
+
+•	How HDFS is configured? How many Data Nodes and Racks are in place?
+ Number of data-nodes:		1
+ Number of racks:		1
+
+•	Where the blocks are located? (block path)
+BP-1067413441-127.0.0.1-1508775264580:blk_1073742764_1942
